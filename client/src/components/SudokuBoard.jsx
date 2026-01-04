@@ -1,8 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 
 const SudokuBoard = ({ initialGrid, solutionGrid }) => {
   const [selectedCell, setSelectedCell] = useState(null);
-  const [gameStatus, setGameStatus] = useState('playing');
+  // const [isGameWon, setIsGameWon] = useState(false);
 
   const [grid, setGrid] = useState(() => {
     const newGrid = [];
@@ -34,17 +34,19 @@ const SudokuBoard = ({ initialGrid, solutionGrid }) => {
       newGrid[row][col] = num;
       return newGrid;
     });
-    
-    setTimeout(() => {
-      if (!isValidMove(row, col, num)) {
-        setGameStatus('conflict');
-      } else if (num !== solutionGrid[row * 9 + col]) {
-        setGameStatus('wrong');
-      } else {
-        setGameStatus('correct');
-      }
-    }, 0);
   };
+
+  const isGameWon = useMemo(() => {
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      if (grid[r][c] !== solutionGrid[r * 9 + c]) {
+        return false;
+      }
+    }
+  }
+  return true;
+}, [grid, solutionGrid]);
+
 
   const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
@@ -86,7 +88,6 @@ const SudokuBoard = ({ initialGrid, solutionGrid }) => {
       }
     }
     setGrid(newGrid);
-    setGameStatus('playing');
     setSelectedCell(null);
   };
 
@@ -153,8 +154,58 @@ const SudokuBoard = ({ initialGrid, solutionGrid }) => {
       boxSizing: 'border-box',
       transition: 'all 0.2s ease'
     };
-
   };
+
+  if (isGameWon === true) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0, left: 0, right: 0, bottom: 0,
+        background: 'rgba(0,0,0,0.8)',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000,
+        animation: 'fadeIn 0.3s ease'
+      }}>
+        <div style={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          padding: '4rem 2rem',
+          borderRadius: '24px',
+          textAlign: 'center',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+          transform: 'scale(1.05)',
+          animation: 'popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)'
+        }}>
+          <div style={{ fontSize: 'clamp(3rem, 8vw, 6rem)', fontWeight: 900, color: '#fff', marginBottom: '1rem', textShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
+            🎉 SUDOKU COMPLETE! 🎉
+          </div>
+          <div style={{ fontSize: '1.5rem', color: '#fff', marginBottom: '2rem', opacity: 0.9 }}>
+            Perfect Solution!
+          </div>
+          <button
+            onClick={() => {
+              resetGame();
+            }}
+            style={{
+              padding: '1rem 3rem',
+              fontSize: '1.3rem',
+              background: 'linear-gradient(45deg, #ff6b6b, #feca57)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '50px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
+            }}
+          >
+            Play Again ✨
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -171,8 +222,8 @@ const SudokuBoard = ({ initialGrid, solutionGrid }) => {
         style={{
           position: 'relative',
           aspectRatio: '1',
-          width: '500px',  // Responsive width
-          height: '500px'  // Matches width
+          width: '500px',
+          height: '500px',
         }}
       >
         {grid.map((row, rIdx) =>
@@ -268,8 +319,6 @@ const SudokuBoard = ({ initialGrid, solutionGrid }) => {
           Clear
         </button>
       </div>
-
-
     </div>
   );
 };
